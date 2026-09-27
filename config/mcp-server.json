@@ -1,0 +1,32 @@
+{
+  "name" : "deepwiki-mcp-service",
+  "displayName" : "DeepWiki MCP Service",
+  "version" : "1.0.0",
+  "description" : "",
+  "mcpPath" : "/mcp",
+  "auth" : {
+    "type" : "OAUTH2"
+  },
+  "validationMode" : "PRODUCTION",
+  "upstream" : {
+    "baseUrl" : "https://mcp.deepwiki.example.com/v1",
+    "authType" : "NONE",
+    "apiKeyHeader" : "X-API-Key"
+  },
+  "resiliency" : {
+    "timeouts" : true,
+    "retry" : true,
+    "circuitBreaker" : false
+  },
+  "observability" : {
+    "health" : true,
+    "metrics" : true,
+    "tracing" : false
+  },
+  "logging" : {
+    "enterprise" : true,
+    "provider" : "CONSOLE",
+    "destination" : "CONSOLE"
+  },
+  "exceptionHandling" : true
+}
