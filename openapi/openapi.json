@@ -1,0 +1,529 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "DeepWiki MCP Service",
+    "description" : "A Model Context Protocol (MCP) service that provides deep, contextual documentation\nand Q&A for any public GitHub repository. It indexes code, README, wiki, and issue\ndiscussions to answer natural language questions with source citations.\n\nThis service is intended to be used as an MCP server, where each endpoint maps to\nan MCP Tool (ask_question, get_readme, get_repo_info, get_file_tree) and each\nrepository becomes an MCP Resource (repo://{owner}/{name}).\n",
+    "version" : "1.0.0",
+    "contact" : {
+      "name" : "DeepWiki Engineering",
+      "email" : "support@deepwiki.example.com",
+      "url" : "https://deepwiki.example.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers" : [ {
+    "url" : "https://mcp.deepwiki.example.com/v1",
+    "description" : "Production MCP Gateway"
+  }, {
+    "url" : "http://localhost:8080/v1",
+    "description" : "Local Development"
+  } ],
+  "security" : [ ],
+  "tags" : [ {
+    "name" : "Repository",
+    "description" : "Retrieve metadata, README, and file tree of a repository."
+  }, {
+    "name" : "Documentation",
+    "description" : "Get structured documentation (wiki, API references) for a repository."
+  }, {
+    "name" : "Search",
+    "description" : "Ask natural language questions about a repository and get answers."
+  } ],
+  "paths" : {
+    "/repositories/{owner}/{repo}" : {
+      "get" : {
+        "tags" : [ "Repository" ],
+        "summary" : "Get repository information",
+        "description" : "Returns basic metadata about a GitHub repository, such as description, stars,\nforks, primary language, and last updated date.\n",
+        "operationId" : "getRepositoryInfo",
+        "parameters" : [ {
+          "name" : "owner",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "description" : "GitHub username or organization."
+        }, {
+          "name" : "repo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "description" : "Repository name."
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Repository metadata retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RepositoryInfo"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/NotFound"
+          },
+          "500" : {
+            "$ref" : "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/repositories/{owner}/{repo}/readme" : {
+      "get" : {
+        "tags" : [ "Repository" ],
+        "summary" : "Get README content",
+        "description" : "Fetches the raw README content (markdown) and its rendered HTML version\n(if available). This is useful for display in the MCP client.\n",
+        "operationId" : "getReadme",
+        "parameters" : [ {
+          "name" : "owner",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "repo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "format",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "raw", "html" ],
+            "default" : "raw"
+          },
+          "description" : "Return the README as raw markdown or rendered HTML."
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "README content retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReadmeContent"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/NotFound"
+          },
+          "500" : {
+            "$ref" : "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/repositories/{owner}/{repo}/tree" : {
+      "get" : {
+        "tags" : [ "Repository" ],
+        "summary" : "Get repository file tree",
+        "description" : "Returns a structured list of files and directories in the repository.\nCan be filtered by path or file extension.\n",
+        "operationId" : "getFileTree",
+        "parameters" : [ {
+          "name" : "owner",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "repo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "path",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          },
+          "description" : "Subdirectory path to list (empty for root)."
+        }, {
+          "name" : "extension",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "description" : "Filter by file extension (e.g., \".js\", \".py\")."
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "maximum" : 100,
+            "default" : 50
+          },
+          "description" : "Maximum number of items to return."
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "File tree retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FileTree"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/NotFound"
+          },
+          "500" : {
+            "$ref" : "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/repositories/{owner}/{repo}/ask" : {
+      "post" : {
+        "tags" : [ "Search" ],
+        "summary" : "Ask a question about the repository",
+        "description" : "Submits a natural language question about the repository. The service will\nsearch the codebase, README, wiki, and issues to generate an answer with\ncitations to relevant sources. This is the primary MCP tool for deep research.\n",
+        "operationId" : "askQuestion",
+        "parameters" : [ {
+          "name" : "owner",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "repo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "required" : [ "question" ],
+                "properties" : {
+                  "question" : {
+                    "type" : "string",
+                    "description" : "The user's question about the repository.",
+                    "example" : "What is the purpose of the main function in this project?"
+                  },
+                  "max_tokens" : {
+                    "type" : "integer",
+                    "default" : 500,
+                    "description" : "Maximum length of the answer."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Answer generated.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Answer"
+                }
+              }
+            }
+          },
+          "400" : {
+            "$ref" : "#/components/responses/BadRequest"
+          },
+          "404" : {
+            "$ref" : "#/components/responses/NotFound"
+          },
+          "500" : {
+            "$ref" : "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/documentation/{owner}/{repo}" : {
+      "get" : {
+        "tags" : [ "Documentation" ],
+        "summary" : "Get repository documentation (wiki)",
+        "description" : "Retrieves the entire wiki or a specific page from the repository's GitHub Wiki.\nIf no page is specified, returns a list of available pages.\n",
+        "operationId" : "getWiki",
+        "parameters" : [ {
+          "name" : "owner",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "repo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "description" : "Name of the wiki page (e.g., \"Home\"). If omitted, lists all pages."
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Wiki content or page list.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/components/schemas/WikiPage"
+                  }, {
+                    "$ref" : "#/components/schemas/WikiPageList"
+                  } ]
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/NotFound"
+          },
+          "500" : {
+            "$ref" : "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RepositoryInfo" : {
+        "type" : "object",
+        "properties" : {
+          "owner" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "stars" : {
+            "type" : "integer"
+          },
+          "forks" : {
+            "type" : "integer"
+          },
+          "primaryLanguage" : {
+            "type" : "string"
+          },
+          "defaultBranch" : {
+            "type" : "string"
+          },
+          "lastUpdated" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "url" : {
+            "type" : "string",
+            "format" : "uri"
+          }
+        }
+      },
+      "ReadmeContent" : {
+        "type" : "object",
+        "properties" : {
+          "raw" : {
+            "type" : "string",
+            "description" : "Markdown content of the README."
+          },
+          "html" : {
+            "type" : "string",
+            "description" : "Rendered HTML version (optional)."
+          },
+          "filename" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FileTree" : {
+        "type" : "object",
+        "properties" : {
+          "path" : {
+            "type" : "string"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "type" : {
+                  "type" : "string",
+                  "enum" : [ "file", "directory" ]
+                },
+                "size" : {
+                  "type" : "integer"
+                },
+                "path" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Answer" : {
+        "type" : "object",
+        "required" : [ "answer" ],
+        "properties" : {
+          "answer" : {
+            "type" : "string",
+            "description" : "The generated answer to the question."
+          },
+          "sources" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "file" : {
+                  "type" : "string"
+                },
+                "lineRange" : {
+                  "type" : "string"
+                },
+                "snippet" : {
+                  "type" : "string"
+                },
+                "url" : {
+                  "type" : "string",
+                  "format" : "uri"
+                }
+              }
+            }
+          },
+          "confidence" : {
+            "type" : "number",
+            "format" : "float",
+            "minimum" : 0,
+            "maximum" : 1
+          }
+        }
+      },
+      "WikiPage" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string"
+          },
+          "content" : {
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string",
+            "format" : "uri"
+          }
+        }
+      },
+      "WikiPageList" : {
+        "type" : "object",
+        "properties" : {
+          "pages" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "title" : {
+                  "type" : "string"
+                },
+                "url" : {
+                  "type" : "string",
+                  "format" : "uri"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "required" : [ "status", "message" ],
+        "properties" : {
+          "status" : {
+            "type" : "integer"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "path" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "responses" : {
+      "BadRequest" : {
+        "description" : "Invalid request payload or parameters.",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound" : {
+        "description" : "The requested repository, page, or resource was not found.",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "InternalError" : {
+        "description" : "Internal server error.",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
