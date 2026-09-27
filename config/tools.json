@@ -1,0 +1,190 @@
+{
+  "tools" : [ {
+    "name" : "get_repository_info",
+    "description" : "Get repository information",
+    "inputSchema" : {
+      "type" : "object",
+      "properties" : {
+        "owner" : {
+          "type" : "string",
+          "description" : "GitHub username or organization."
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "Repository name."
+        }
+      },
+      "required" : [ "owner", "repo" ],
+      "additionalProperties" : true
+    },
+    "http" : {
+      "method" : "GET",
+      "path" : "/repositories/{owner}/{repo}",
+      "pathParams" : [ "owner", "repo" ],
+      "query" : [ ],
+      "headers" : [ ],
+      "bodyArg" : null
+    }
+  }, {
+    "name" : "get_readme",
+    "description" : "Get README content",
+    "inputSchema" : {
+      "type" : "object",
+      "properties" : {
+        "owner" : {
+          "type" : "string",
+          "description" : "Path parameter 'owner'"
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "Path parameter 'repo'"
+        },
+        "format" : {
+          "enum" : [ "raw", "html" ],
+          "default" : "raw",
+          "type" : "string",
+          "description" : "Return the README as raw markdown or rendered HTML."
+        }
+      },
+      "required" : [ "owner", "repo" ],
+      "additionalProperties" : true
+    },
+    "http" : {
+      "method" : "GET",
+      "path" : "/repositories/{owner}/{repo}/readme",
+      "pathParams" : [ "owner", "repo" ],
+      "query" : [ {
+        "arg" : "format",
+        "name" : "format"
+      } ],
+      "headers" : [ ],
+      "bodyArg" : null
+    }
+  }, {
+    "name" : "get_file_tree",
+    "description" : "Get repository file tree",
+    "inputSchema" : {
+      "type" : "object",
+      "properties" : {
+        "owner" : {
+          "type" : "string",
+          "description" : "Path parameter 'owner'"
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "Path parameter 'repo'"
+        },
+        "path" : {
+          "default" : "",
+          "type" : "string",
+          "description" : "Subdirectory path to list (empty for root)."
+        },
+        "extension" : {
+          "type" : "string",
+          "description" : "Filter by file extension (e.g., \".js\", \".py\")."
+        },
+        "limit" : {
+          "default" : 50,
+          "maximum" : 100,
+          "minimum" : 1,
+          "type" : "integer",
+          "description" : "Maximum number of items to return."
+        }
+      },
+      "required" : [ "owner", "repo" ],
+      "additionalProperties" : true
+    },
+    "http" : {
+      "method" : "GET",
+      "path" : "/repositories/{owner}/{repo}/tree",
+      "pathParams" : [ "owner", "repo" ],
+      "query" : [ {
+        "arg" : "path",
+        "name" : "path"
+      }, {
+        "arg" : "extension",
+        "name" : "extension"
+      }, {
+        "arg" : "limit",
+        "name" : "limit"
+      } ],
+      "headers" : [ ],
+      "bodyArg" : null
+    }
+  }, {
+    "name" : "ask_question",
+    "description" : "Ask a question about the repository",
+    "inputSchema" : {
+      "type" : "object",
+      "properties" : {
+        "owner" : {
+          "type" : "string",
+          "description" : "Path parameter 'owner'"
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "Path parameter 'repo'"
+        },
+        "body" : {
+          "type" : "object",
+          "properties" : {
+            "question" : {
+              "description" : "The user's question about the repository.",
+              "type" : "string"
+            },
+            "max_tokens" : {
+              "description" : "Maximum length of the answer.",
+              "default" : 500,
+              "type" : "integer"
+            }
+          },
+          "required" : [ "question" ],
+          "description" : "Request body"
+        }
+      },
+      "required" : [ "owner", "repo", "body" ],
+      "additionalProperties" : true
+    },
+    "http" : {
+      "method" : "POST",
+      "path" : "/repositories/{owner}/{repo}/ask",
+      "pathParams" : [ "owner", "repo" ],
+      "query" : [ ],
+      "headers" : [ ],
+      "bodyArg" : "body"
+    }
+  }, {
+    "name" : "get_wiki",
+    "description" : "Get repository documentation (wiki)",
+    "inputSchema" : {
+      "type" : "object",
+      "properties" : {
+        "owner" : {
+          "type" : "string",
+          "description" : "Path parameter 'owner'"
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "Path parameter 'repo'"
+        },
+        "page" : {
+          "type" : "string",
+          "description" : "Name of the wiki page (e.g., \"Home\"). If omitted, lists all pages."
+        }
+      },
+      "required" : [ "owner", "repo" ],
+      "additionalProperties" : true
+    },
+    "http" : {
+      "method" : "GET",
+      "path" : "/documentation/{owner}/{repo}",
+      "pathParams" : [ "owner", "repo" ],
+      "query" : [ {
+        "arg" : "page",
+        "name" : "page"
+      } ],
+      "headers" : [ ],
+      "bodyArg" : null
+    }
+  } ]
+}
